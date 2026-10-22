@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/33799646/README.md)
+[README_1.md](https://github.com/user-attachments/files/33800791/README_1.md)
 # LabelSprint: Thermal Shipping Label Generator (Card Collector Edition)
 
 A single-file, browser-based tool for turning a pasted address into a clean 4×6" thermal shipping label. Built for trading card sellers who ship a lot of small packages, with "DO NOT BEND" banners, card badges, and order reference lines built in.
@@ -78,6 +78,20 @@ LabelSprint prints through your browser's standard print dialog. For best result
 5. Turn off **Headers and footers**.
 
 Your printer's driver settings (darkness, speed, label calibration) still apply as usual.
+
+---
+
+## Using Your Printer's Own App (AiYin, etc.)
+
+Many Bluetooth label printers, including AiYin, are driven by the manufacturer's phone app rather than a computer driver. LabelSprint can hand those apps a ready-made label file:
+
+- **Save PNG**: a 812 × 1218 px black-and-white image (4×6" at 203 DPI)
+- **Save PDF**: a single-page 4×6" PDF
+- **Share**: on phones, opens the share sheet so you can send the label straight to your printer's app (shown only on devices that support it)
+
+Typical phone workflow: copy the buyer's address, paste it into LabelSprint, tap **Share** (or **Save PNG**), choose your printer's app, and print.
+
+> The exact file types each printer app accepts can vary by app version and printer model. PNG and PDF are the most widely accepted. Test with your own printer and label size first.
 
 ---
 
