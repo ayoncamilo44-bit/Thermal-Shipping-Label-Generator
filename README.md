@@ -1,4 +1,4 @@
-[README 10.md](https://github.com/user-attachments/files/33800933/README.10.md)
+
 # LabelSprint: Thermal Shipping Label Generator (Card Collector Edition)
 
 A single-file, browser-based tool for turning a pasted address into a clean 4×6" thermal shipping label. Built for trading card sellers who ship a lot of small packages, with "DO NOT BEND" banners, card badges, and order reference lines built in.
