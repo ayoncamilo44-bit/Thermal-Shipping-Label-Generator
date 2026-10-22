@@ -1,4 +1,4 @@
-[README_1.md](https://github.com/user-attachments/files/33800791/README_1.md)
+[README 10.md](https://github.com/user-attachments/files/33800933/README.10.md)
 # LabelSprint: Thermal Shipping Label Generator (Card Collector Edition)
 
 A single-file, browser-based tool for turning a pasted address into a clean 4×6" thermal shipping label. Built for trading card sellers who ship a lot of small packages, with "DO NOT BEND" banners, card badges, and order reference lines built in.
@@ -116,7 +116,7 @@ Everything lives in one HTML file, so changes are easy:
 | Label size                           | `@page` size and `#thermal-print-area` width/height in CSS     |
 | Colors and fonts                     | The Tailwind config and Google Fonts import at the top         |
 | History length                       | The `20` limit in `saveToHistory()`                            |
-| Barcode max length                   | The `slice(0, 20)` in `code128Svg()` and the input `maxlength` |
+| Barcode max length                   | The `slice(0, 20)` in `code128Bars()` and the input `maxlength` |
 
 ---
 
