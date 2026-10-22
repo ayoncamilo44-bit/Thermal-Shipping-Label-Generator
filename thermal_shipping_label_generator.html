@@ -1,748 +1,613 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thermal Shipping Label Generator | Card Collector Edition</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        gold: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                        slate: {
-                            850: '#1e293b',
-                            900: '#0f172a',
-                            950: '#020617'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Libre+Barcode+128&family=Space+Mono:wght@400;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thermal Shipping Label Generator | Card Collector Edition</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { colors: {
+    gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
+    slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' }
+  } } }
+}
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+body { font-family: 'Inter', sans-serif; }
+.mono-font { font-family: 'Space Mono', monospace; }
+.thermal-aspect { width: 100%; max-width: 400px; aspect-ratio: 4 / 6; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .barcode-font {
-            font-family: 'Libre Barcode 128', cursive;
-        }
-
-        .mono-font {
-            font-family: 'Space Mono', monospace;
-        }
-
-        /* Aspect ratio 4:6 simulation */
-        .thermal-aspect {
-            width: 100%;
-            max-width: 400px;
-            aspect-ratio: 4 / 6;
-        }
-
-        /* Dedicated Print Styles tailored for 4x6 Direct Thermal Printers */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            
-            #thermal-print-area, #thermal-print-area * {
-                visibility: visible;
-            }
-
-            #thermal-print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 4in !important;
-                height: 6in !important;
-                margin: 0 !important;
-                padding: 0.2in !important;
-                background-color: #ffffff !important;
-                color: #000000 !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 0 !important;
-                font-family: 'Inter', sans-serif !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .no-print {
-                display: none !important;
-            }
-
-            @page {
-                size: 4in 6in;
-                margin: 0;
-            }
-        }
-    </style>
+@media print {
+  body * { visibility: hidden; }
+  #thermal-print-area, #thermal-print-area * { visibility: visible; }
+  #thermal-print-area {
+    position: absolute; left: 0; top: 0;
+    width: 4in !important; height: 6in !important; max-width: none !important;
+    margin: 0 !important; padding: 0.2in !important;
+    background-color: #fff !important; color: #000 !important;
+    box-shadow: none !important; border: none !important; border-radius: 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  .no-print { display: none !important; }
+  @page { size: 4in 6in; margin: 0; }
+}
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 font-bold text-xl">
-                    <i class="fa-solid fa-print"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                        LabelSprint <span class="text-xs font-semibold px-2 py-0.5 rounded bg-gold-500/20 text-gold-400 border border-gold-500/30">Card Seller Pro</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Direct 4x6 Thermal Address Utility</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                <button id="btn-settings-toggle" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span>Default Sender</span>
-                </button>
-                <div class="h-4 w-px bg-slate-800"></div>
-                <div class="text-xs text-slate-400 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Ready for Thermal Driver</span>
-                </div>
-            </div>
-        </div>
-    </header>
+<header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 no-print">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 font-bold text-xl"><i class="fa-solid fa-print"></i></div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">LabelSprint <span class="text-xs font-semibold px-2 py-0.5 rounded bg-gold-500/20 text-gold-400 border border-gold-500/30">Card Seller Pro</span></h1>
+        <p class="text-xs text-slate-400">4x6 Thermal Address Label Utility</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <button id="btn-settings-toggle" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700 flex items-center gap-2"><i class="fa-solid fa-sliders"></i><span>Default Sender</span></button>
+    </div>
+  </div>
+</header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
 
-        <!-- Left Column: Controls & Input (7 Cols) -->
-        <div class="lg:col-span-7 space-y-6">
+  <div class="lg:col-span-7 space-y-6">
 
-            <!-- Raw Address Paste Box -->
-            <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
-                <div class="flex items-center justify-between">
-                    <label for="raw-address" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-paste text-gold-400"></i>
-                        <span>Paste Raw Unformatted Address</span>
-                    </label>
-                    <button id="btn-sample" class="text-xs text-gold-400 hover:text-gold-300 font-medium hover:underline flex items-center gap-1">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Load Sample Order
-                    </button>
-                </div>
-
-                <div class="relative">
-                    <textarea id="raw-address" rows="4" 
-                        class="w-full bg-slate-950 border border-slate-700/80 rounded-lg p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition font-mono"
-                        placeholder="Paste order text, forum message, or email address here...
+    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <label for="raw-address" class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-paste text-gold-400"></i><span>Paste Raw Unformatted Address</span></label>
+        <button id="btn-sample" class="text-xs text-gold-400 hover:text-gold-300 font-medium hover:underline flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> Load Sample Order</button>
+      </div>
+      <div class="relative">
+        <textarea id="raw-address" rows="4" class="w-full bg-slate-950 border border-slate-700/80 rounded-lg p-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition font-mono" placeholder="Paste order text, forum message, or email address here...
 e.g.:
 John Doe
 742 Evergreen Terrace, Apt 2B
 Springfield, OR 97477"></textarea>
-                    <button id="btn-clear" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 text-xs bg-slate-800 px-2 py-1 rounded border border-slate-700 transition">
-                        Clear
-                    </button>
-                </div>
-                <p class="text-xs text-slate-400 flex items-center gap-1">
-                    <i class="fa-solid fa-bolt text-gold-400"></i> Auto-parses instantly as you paste or type.
-                </p>
-            </div>
-
-            <!-- Parsed Fields Editor -->
-            <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-slate-400"></i>
-                        <span>Parsed Recipient Details</span>
-                    </h3>
-                    <span class="text-xs text-slate-500">Edit fields directly if needed</span>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div class="sm:col-span-2">
-                        <label class="block text-slate-400 font-medium mb-1">Full Name / Recipient</label>
-                        <input type="text" id="field-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500">
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="block text-slate-400 font-medium mb-1">Street Address Line 1</label>
-                        <input type="text" id="field-street1" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500">
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="block text-slate-400 font-medium mb-1">Street Address Line 2 (Apt, Suite, Unit, Box)</label>
-                        <input type="text" id="field-street2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-slate-400 font-medium mb-1">City</label>
-                        <input type="text" id="field-city" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-slate-400 font-medium mb-1">State</label>
-                            <input type="text" id="field-state" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 uppercase focus:outline-none focus:border-gold-500">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 font-medium mb-1">ZIP Code</label>
-                            <input type="text" id="field-zip" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Custom Label Options -->
-            <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
-                <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-tags text-slate-400"></i>
-                    <span>Card Collector Badges & Extras</span>
-                </h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition">
-                        <input type="checkbox" id="badge-fragile" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked>
-                        <span class="text-slate-300 font-medium">Add "DO NOT BEND" Header</span>
-                    </label>
-
-                    <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition">
-                        <input type="checkbox" id="badge-cards" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked>
-                        <span class="text-slate-300 font-medium">Add Trading Card Icon Badge</span>
-                    </label>
-
-                    <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition">
-                        <input type="checkbox" id="badge-barcode" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked>
-                        <span class="text-slate-300 font-medium">Add Visual Tracking Barcode</span>
-                    </label>
-
-                    <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition">
-                        <input type="checkbox" id="badge-order-id" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked>
-                        <span class="text-slate-300 font-medium">Include Custom Ref / Order #</span>
-                    </label>
-                </div>
-
-                <div id="order-ref-container" class="pt-2">
-                    <label class="block text-slate-400 font-medium mb-1 text-xs">Order / Card Reference Number (Optional)</label>
-                    <input type="text" id="field-order-num" placeholder="e.g. SPORTLOTS-#84920 or 1977-TOPPS-LOT" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500">
-                </div>
-            </div>
-
-            <!-- Recent History / Saved Labels -->
-            <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
-                        <span>Recent Labels Log</span>
-                    </h3>
-                    <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 font-medium hover:underline">
-                        Clear Log
-                    </button>
-                </div>
-
-                <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs">
-                    <div class="text-center py-6 text-slate-500 italic">No recent shipments printed yet.</div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Right Column: Visual Thermal Preview & Print Action (5 Cols) -->
-        <div class="lg:col-span-5 space-y-6">
-
-            <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4 sticky top-20">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-eye text-gold-400"></i>
-                        <span>4x6 Thermal Label Preview</span>
-                    </h3>
-                    <span class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">Monochrome</span>
-                </div>
-
-                <!-- Label Container (Simulates Physical Thermal 4x6 Sticker Paper) -->
-                <div class="flex justify-center bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                    <div id="thermal-print-area" class="bg-white text-black p-5 rounded-sm shadow-2xl flex flex-col justify-between select-none border border-slate-300 thermal-aspect relative overflow-hidden font-sans">
-                        
-                        <!-- Top Header Area: Sender & Warning -->
-                        <div class="border-b-2 border-black pb-3 space-y-2">
-                            <div class="flex justify-between items-start">
-                                <!-- Return Address -->
-                                <div class="text-[10px] leading-tight font-medium uppercase tracking-tight text-gray-800 space-y-0.5">
-                                    <div class="font-bold text-black" id="preview-sender-name">CARD VAULT LOGISTICS</div>
-                                    <div id="preview-sender-street">123 COLLECTOR WAY, STE 400</div>
-                                    <div id="preview-sender-citystate">BRAWLEY, CA 92227</div>
-                                </div>
-
-                                <!-- Card Collector Graphic Icon Badge -->
-                                <div id="preview-badge-cards-icon" class="border border-black p-1 text-center flex flex-col items-center justify-center min-w-[42px]">
-                                    <i class="fa-solid fa-layer-group text-lg text-black"></i>
-                                    <span class="text-[7px] font-black tracking-tighter uppercase leading-none mt-0.5">CARDS</span>
-                                </div>
-                            </div>
-
-                            <!-- Optional DO NOT BEND banner -->
-                            <div id="preview-badge-fragile" class="bg-black text-white text-center font-black text-xs py-1 px-2 tracking-wider uppercase rounded-none">
-                                ⚡ DO NOT BEND - TRADING CARDS ENCLOSED ⚡
-                            </div>
-                        </div>
-
-                        <!-- Main Delivery Address Box -->
-                        <div class="my-auto py-4 px-2 space-y-1">
-                            <div class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">SHIP TO:</div>
-                            <div id="preview-to-name" class="text-lg font-black tracking-tight leading-tight uppercase text-black">
-                                JOHN DOE
-                            </div>
-                            <div id="preview-to-street1" class="text-sm font-bold text-black uppercase leading-tight">
-                                742 EVERGREEN TERRACE
-                            </div>
-                            <div id="preview-to-street2" class="text-sm font-bold text-black uppercase leading-tight hidden">
-                                APT 2B
-                            </div>
-                            <div class="text-base font-extrabold text-black uppercase leading-tight pt-1 flex items-baseline gap-1">
-                                <span id="preview-to-city">SPRINGFIELD</span>,
-                                <span id="preview-to-state">OR</span>
-                                <span id="preview-to-zip" class="text-lg font-black ml-1">97477</span>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Section: Order Ref & Barcode -->
-                        <div class="border-t-2 border-black pt-3 space-y-2">
-                            <div class="flex justify-between items-end text-[9px] font-mono font-bold">
-                                <div>
-                                    <span class="text-gray-500">REF:</span>
-                                    <span id="preview-order-ref" class="text-black">SPORTLOTS-#84920</span>
-                                </div>
-                                <div class="text-right text-gray-500">STANDARD PARCEL</div>
-                            </div>
-
-                            <!-- Simulated Crisp Barcode -->
-                            <div id="preview-badge-barcode" class="text-center pt-1">
-                                <div class="barcode-font text-4xl leading-none tracking-widest text-black select-none">
-                                    *97477-742-EVERGREEN*
-                                </div>
-                                <div class="text-[8px] font-mono text-gray-600 tracking-widest uppercase mt-0.5">
-                                    420 97477 9274 8102 9384 11
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Print Trigger Button -->
-                <div class="pt-2">
-                    <button id="btn-print" class="w-full bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition duration-150 flex items-center justify-center space-x-2 text-base">
-                        <i class="fa-solid fa-print text-xl"></i>
-                        <span>PRINT DIRECT TO THERMAL PRINTER</span>
-                    </button>
-                    <p class="text-[11px] text-slate-400 text-center mt-2.5">
-                        <i class="fa-solid fa-circle-info text-gold-400/80 mr-1"></i> Triggering print bypasses PDF save prompts and outputs directly to your 4x6 thermal paper.
-                    </p>
-                </div>
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- Modal: Default Sender Address Settings -->
-    <div id="modal-settings" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-house-user text-gold-400"></i>
-                    <span>Default Sender Return Address</span>
-                </h3>
-                <button id="btn-modal-close" class="text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-400 mb-1 font-medium">Return Business / Seller Name</label>
-                    <input type="text" id="sender-name" value="CARD VAULT LOGISTICS" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1 font-medium">Street Address</label>
-                    <input type="text" id="sender-street" value="123 COLLECTOR WAY, STE 400" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1 font-medium">City</label>
-                        <input type="text" id="sender-city" value="BRAWLEY" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1 font-medium">State & ZIP</label>
-                        <input type="text" id="sender-statezip" value="CA 92227" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase">
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-2 flex justify-end gap-2">
-                <button id="btn-modal-save" class="w-full bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition">
-                    Save Sender Profile
-                </button>
-            </div>
-        </div>
+        <button id="btn-clear" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 text-xs bg-slate-800 px-2 py-1 rounded border border-slate-700 transition">Clear</button>
+      </div>
+      <p class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-solid fa-bolt text-gold-400"></i> Auto-parses as you paste or type. US addresses only.</p>
     </div>
 
-    <!-- Toast Notification Message Box (No alert() used) -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-gold-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all transform translate-y-20 opacity-0 z-50 no-print">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-lg"></i>
-        <span id="toast-message" class="text-xs font-medium">Notification message</span>
+    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-sliders text-slate-400"></i><span>Parsed Recipient Details</span></h3>
+        <span class="text-xs text-slate-500">Edit fields directly if needed</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="sm:col-span-2"><label class="block text-slate-400 font-medium mb-1">Full Name / Recipient</label><input type="text" id="field-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500"></div>
+        <div class="sm:col-span-2"><label class="block text-slate-400 font-medium mb-1">Street Address Line 1</label><input type="text" id="field-street1" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500"></div>
+        <div class="sm:col-span-2"><label class="block text-slate-400 font-medium mb-1">Street Address Line 2 (Apt, Suite, Unit, Box)</label><input type="text" id="field-street2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500"></div>
+        <div><label class="block text-slate-400 font-medium mb-1">City</label><input type="text" id="field-city" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="block text-slate-400 font-medium mb-1">State</label><input type="text" id="field-state" maxlength="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 uppercase focus:outline-none focus:border-gold-500"></div>
+          <div><label class="block text-slate-400 font-medium mb-1">ZIP Code</label><input type="text" id="field-zip" maxlength="10" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-gold-500"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 no-print mt-auto">
-        LabelSprint Thermal Utility • Optimized for 4x6 Direct Thermal Printers (AiYin, Rollo, Zebra, MUNBYN)
-    </footer>
+    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
+      <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2"><i class="fa-solid fa-tags text-slate-400"></i><span>Card Collector Badges & Extras</span></h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition"><input type="checkbox" id="badge-fragile" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked><span class="text-slate-300 font-medium">Add "DO NOT BEND" Header</span></label>
+        <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition"><input type="checkbox" id="badge-cards" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked><span class="text-slate-300 font-medium">Add Trading Card Icon Badge</span></label>
+        <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition"><input type="checkbox" id="badge-barcode" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked><span class="text-slate-300 font-medium">Add Reference Barcode (Code 128)</span></label>
+        <label class="flex items-center space-x-3 bg-slate-950 p-3 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition"><input type="checkbox" id="badge-order-id" class="rounded border-slate-700 text-gold-500 focus:ring-gold-500 bg-slate-900" checked><span class="text-slate-300 font-medium">Include Custom Ref / Order #</span></label>
+      </div>
+      <div id="order-ref-container" class="pt-2">
+        <label class="block text-slate-400 font-medium mb-1 text-xs">Order / Reference Number (max 20 characters; also encoded in the barcode)</label>
+        <input type="text" id="field-order-num" maxlength="20" placeholder="e.g. SPORTLOTS-84920" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-gold-500">
+      </div>
+    </div>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // UI State Elements
-            const rawTextarea = document.getElementById('raw-address');
-            const btnClear = document.getElementById('btn-clear');
-            const btnSample = document.getElementById('btn-sample');
-            const btnPrint = document.getElementById('btn-print');
-            
-            // Editable Inputs
-            const inputName = document.getElementById('field-name');
-            const inputStreet1 = document.getElementById('field-street1');
-            const inputStreet2 = document.getElementById('field-street2');
-            const inputCity = document.getElementById('field-city');
-            const inputState = document.getElementById('field-state');
-            const inputZip = document.getElementById('field-zip');
-            const inputOrderNum = document.getElementById('field-order-num');
+    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-slate-400"></i><span>Recent Labels Log</span></h3>
+        <button id="btn-clear-history" class="text-xs text-rose-400 hover:text-rose-300 font-medium hover:underline">Clear Log</button>
+      </div>
+      <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs"></div>
+    </div>
+  </div>
 
-            // Badges Toggles
-            const chkFragile = document.getElementById('badge-fragile');
-            const chkCards = document.getElementById('badge-cards');
-            const chkBarcode = document.getElementById('badge-barcode');
-            const chkOrderId = document.getElementById('badge-order-id');
+  <div class="lg:col-span-5 space-y-6">
+    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 shadow-xl space-y-4 sticky top-20">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-eye text-gold-400"></i><span>4x6 Thermal Label Preview</span></h3>
+        <span class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">Monochrome</span>
+      </div>
 
-            // Preview Elements
-            const prevName = document.getElementById('preview-to-name');
-            const prevStreet1 = document.getElementById('preview-to-street1');
-            const prevStreet2 = document.getElementById('preview-to-street2');
-            const prevCity = document.getElementById('preview-to-city');
-            const prevState = document.getElementById('preview-to-state');
-            const prevZip = document.getElementById('preview-to-zip');
-            const prevOrderRef = document.getElementById('preview-order-ref');
-            const prevBadgeFragile = document.getElementById('preview-badge-fragile');
-            const prevBadgeCards = document.getElementById('preview-badge-cards-icon');
-            const prevBadgeBarcode = document.getElementById('preview-badge-barcode');
+      <div class="flex justify-center bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+        <div id="thermal-print-area" class="bg-white text-black p-5 rounded-sm shadow-2xl flex flex-col justify-between select-none border border-slate-300 thermal-aspect relative overflow-hidden font-sans">
 
-            // Sender Settings
-            const btnSettingsToggle = document.getElementById('btn-settings-toggle');
-            const modalSettings = document.getElementById('modal-settings');
-            const btnModalClose = document.getElementById('btn-modal-close');
-            const btnModalSave = document.getElementById('btn-modal-save');
-            const senderNameInput = document.getElementById('sender-name');
-            const senderStreetInput = document.getElementById('sender-street');
-            const senderCityInput = document.getElementById('sender-city');
-            const senderStateZipInput = document.getElementById('sender-statezip');
+          <div class="border-b-2 border-black pb-3 space-y-2">
+            <div class="flex justify-between items-start">
+              <div class="text-[10px] leading-tight font-medium uppercase tracking-tight text-gray-800 space-y-0.5">
+                <div class="font-bold text-black" id="preview-sender-name">CARD VAULT LOGISTICS</div>
+                <div id="preview-sender-street">123 COLLECTOR WAY, STE 400</div>
+                <div id="preview-sender-citystate">BRAWLEY, CA 92227</div>
+              </div>
+              <div id="preview-badge-cards-icon" class="border border-black p-1 text-center flex flex-col items-center justify-center min-w-[42px]">
+                <i class="fa-solid fa-layer-group text-lg text-black"></i>
+                <span class="text-[7px] font-black tracking-tighter uppercase leading-none mt-0.5">CARDS</span>
+              </div>
+            </div>
+            <div id="preview-badge-fragile" class="bg-black text-white text-center font-black text-xs py-1 px-2 tracking-wider uppercase rounded-none">DO NOT BEND - TRADING CARDS ENCLOSED</div>
+          </div>
 
-            const prevSenderName = document.getElementById('preview-sender-name');
-            const prevSenderStreet = document.getElementById('preview-sender-street');
-            const prevSenderCityState = document.getElementById('preview-sender-citystate');
+          <div class="my-auto py-4 px-2 space-y-1">
+            <div class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">SHIP TO:</div>
+            <div id="preview-to-name" class="text-lg font-black tracking-tight leading-tight uppercase text-black">JOHN DOE</div>
+            <div id="preview-to-street1" class="text-sm font-bold text-black uppercase leading-tight">742 EVERGREEN TERRACE</div>
+            <div id="preview-to-street2" class="text-sm font-bold text-black uppercase leading-tight hidden">APT 2B</div>
+            <div class="text-base font-extrabold text-black uppercase leading-tight pt-1 flex items-baseline gap-1">
+              <span id="preview-to-city">SPRINGFIELD</span>,
+              <span id="preview-to-state">OR</span>
+              <span id="preview-to-zip" class="text-lg font-black ml-1">97477</span>
+            </div>
+          </div>
 
-            // History Log
-            const historyListContainer = document.getElementById('history-list');
-            const btnClearHistory = document.getElementById('btn-clear-history');
+          <div class="border-t-2 border-black pt-3 space-y-2">
+            <div class="flex justify-between items-end text-[9px] font-mono font-bold">
+              <div><span class="text-gray-500">REF:</span> <span id="preview-order-ref" class="text-black">CARD-SHIPMENT</span></div>
+              <div class="text-right text-gray-500">STANDARD PARCEL</div>
+            </div>
+            <div id="preview-badge-barcode" class="text-center pt-1">
+              <div id="preview-barcode-svg"></div>
+              <div id="preview-barcode-text" class="text-[8px] font-mono text-gray-700 tracking-widest uppercase mt-0.5"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            let printHistory = JSON.parse(localStorage.getItem('thermal_print_history') || '[]');
+      <div class="pt-2">
+        <button id="btn-print" class="w-full bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition duration-150 flex items-center justify-center space-x-2 text-base"><i class="fa-solid fa-print text-xl"></i><span>PRINT LABEL</span></button>
+        <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+          <button id="btn-save-png" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-image"></i> Save PNG</button>
+          <button id="btn-save-pdf" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-file-pdf"></i> Save PDF</button>
+          <button id="btn-share" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-share-nodes"></i> Share</button>
+        </div>
+        <p class="text-[11px] text-slate-400 text-center mt-2.5"><i class="fa-solid fa-circle-info text-gold-400/80 mr-1"></i> Print opens your browser's print dialog (paper 4x6, margins None, scale 100%). Save or Share makes a 4x6 file at 203 DPI for your printer's app.</p>
+      </div>
+    </div>
+  </div>
+</main>
 
-            // --- Smart Address Parser Engine ---
-            function parseRawAddress(text) {
-                if (!text || !text.trim()) {
-                    return { name: '', street1: '', street2: '', city: '', state: '', zip: '' };
-                }
+<div id="modal-settings" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-house-user text-gold-400"></i><span>Default Sender Return Address</span></h3>
+      <button id="btn-modal-close" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="space-y-3 text-xs">
+      <div><label class="block text-slate-400 mb-1 font-medium">Return Business / Seller Name</label><input type="text" id="sender-name" value="CARD VAULT LOGISTICS" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase"></div>
+      <div><label class="block text-slate-400 mb-1 font-medium">Street Address</label><input type="text" id="sender-street" value="123 COLLECTOR WAY, STE 400" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-slate-400 mb-1 font-medium">City</label><input type="text" id="sender-city" value="BRAWLEY" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase"></div>
+        <div><label class="block text-slate-400 mb-1 font-medium">State & ZIP</label><input type="text" id="sender-statezip" value="CA 92227" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:outline-none focus:border-gold-500 uppercase"></div>
+      </div>
+    </div>
+    <div class="pt-2 flex justify-end gap-2"><button id="btn-modal-save" class="w-full bg-gold-500 hover:bg-gold-400 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition">Save Sender Profile</button></div>
+  </div>
+</div>
 
-                // Clean and split lines
-                const lines = text.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
+<div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-gold-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all transform translate-y-20 opacity-0 z-50 no-print">
+  <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-lg"></i>
+  <span id="toast-message" class="text-xs font-medium">Notification message</span>
+</div>
 
-                if (lines.length === 0) return { name: '', street1: '', street2: '', city: '', state: '', zip: '' };
+<footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 no-print mt-auto">
+  LabelSprint Thermal Utility • Optimized for 4x6 Direct Thermal Printers (AiYin, Rollo, Zebra, MUNBYN)
+</footer>
 
-                let name = lines[0] || '';
-                let street1 = '';
-                let street2 = '';
-                let city = '';
-                let state = '';
-                let zip = '';
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = id => document.getElementById(id);
+  const DEFAULT_REF = 'CARD-SHIPMENT';
 
-                // Regex for City, State ZIP (e.g. Springfield, OR 97477 or Brawley CA 92227-1234)
-                const cityStateZipRegex = /^([A-Za-z\s.]+)[,\s]+([A-Za-z]{2})\s+([0-9]{5}(?:-[0-9]{4})?)$/;
+  const rawTextarea = $('raw-address'), btnClear = $('btn-clear'), btnSample = $('btn-sample'), btnPrint = $('btn-print');
+  const inputName = $('field-name'), inputStreet1 = $('field-street1'), inputStreet2 = $('field-street2');
+  const inputCity = $('field-city'), inputState = $('field-state'), inputZip = $('field-zip'), inputOrderNum = $('field-order-num');
+  const chkFragile = $('badge-fragile'), chkCards = $('badge-cards'), chkBarcode = $('badge-barcode'), chkOrderId = $('badge-order-id');
+  const prevName = $('preview-to-name'), prevStreet1 = $('preview-to-street1'), prevStreet2 = $('preview-to-street2');
+  const prevCity = $('preview-to-city'), prevState = $('preview-to-state'), prevZip = $('preview-to-zip');
+  const prevOrderRef = $('preview-order-ref'), prevBadgeFragile = $('preview-badge-fragile');
+  const prevBadgeCards = $('preview-badge-cards-icon'), prevBadgeBarcode = $('preview-badge-barcode');
+  const prevBarcodeSvg = $('preview-barcode-svg'), prevBarcodeText = $('preview-barcode-text');
+  const modalSettings = $('modal-settings');
+  const senderNameInput = $('sender-name'), senderStreetInput = $('sender-street'), senderCityInput = $('sender-city'), senderStateZipInput = $('sender-statezip');
+  const prevSenderName = $('preview-sender-name'), prevSenderStreet = $('preview-sender-street'), prevSenderCityState = $('preview-sender-citystate');
+  const historyListContainer = $('history-list');
 
-                // Scan lines backwards for City/State/Zip
-                let cityStateIdx = -1;
-                for (let i = lines.length - 1; i >= 1; i--) {
-                    const match = lines[i].match(cityStateZipRegex);
-                    if (match) {
-                        city = match[1].trim();
-                        state = match[2].trim().toUpperCase();
-                        zip = match[3].trim();
-                        cityStateIdx = i;
-                        break;
-                    }
-                }
+  // Safe localStorage helpers (private mode / blocked storage won't break the app)
+  const store = {
+    get(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } },
+    set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} },
+    remove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  };
+  let printHistory = store.get('thermal_print_history', []);
 
-                // If standard regex didn't hit, try fallback zip extraction on last line
-                if (cityStateIdx === -1 && lines.length > 1) {
-                    const lastLine = lines[lines.length - 1];
-                    const zipMatch = lastLine.match(/\b\d{5}(-\d{4})?\b/);
-                    const stateMatch = lastLine.match(/\b([A-Z]{2})\b/i);
+  // --- Code 128 (subset B) barcode generator: scannable, with checksum ---
+  const C128 = ["212222","222122","222221","121223","121322","131222","122213","122312","132212","221213","221312","231212","112232","122132","122231","113222","123122","123221","223211","221132","221231","213212","223112","312131","311222","321122","321221","312212","322112","322211","212123","212321","232121","111323","131123","131321","112313","132113","132311","211313","231113","231311","112133","112331","132131","113123","113321","133121","313121","211331","231131","213113","213311","213131","311123","311321","331121","312113","312311","332111","314111","221411","431111","111224","111422","121124","121421","141122","141221","112214","112412","122114","122411","142112","142211","241211","221114","413111","241112","134111","111242","121142","121241","114212","124112","124211","411212","421112","421211","212141","214121","412121","111143","111341","131141","114113","114311","411113","411311","113141","114131","311141","411131","211412","211214","211232","2331112"];
 
-                    if (zipMatch) zip = zipMatch[0];
-                    if (stateMatch) state = stateMatch[1].toUpperCase();
+  function code128Bars(text) {
+    const clean = (text || '').replace(/[^\x20-\x7E]/g, '').slice(0, 20) || DEFAULT_REF;
+    const codes = [104];
+    let sum = 104;
+    for (let i = 0; i < clean.length; i++) {
+      const v = clean.charCodeAt(i) - 32;
+      codes.push(v);
+      sum += v * (i + 1);
+    }
+    codes.push(sum % 103, 106);
+    let x = 10;
+    const bars = [];
+    codes.forEach(c => {
+      const pat = C128[c];
+      for (let i = 0; i < pat.length; i++) {
+        const w = Number(pat[i]);
+        if (i % 2 === 0) bars.push({ x, w });
+        x += w;
+      }
+    });
+    return { bars, total: x + 10, text: clean };
+  }
 
-                    // Estimate city by removing state and zip from last line
-                    let remaining = lastLine.replace(/\b\d{5}(-\d{4})?\b/, '').replace(/\b[A-Za-z]{2}\b/, '').replace(/,/g, '').trim();
-                    if (remaining) city = remaining;
-                    
-                    cityStateIdx = lines.length - 1;
-                }
+  function code128Svg(text) {
+    const d = code128Bars(text);
+    const rects = d.bars.map(b => `<rect x="${b.x}" y="0" width="${b.w}" height="50"/>`).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${d.total} 50" preserveAspectRatio="none" style="width:100%;height:48px;display:block" fill="#000" shape-rendering="crispEdges">${rects}</svg>`;
+    return { svg, text: d.text };
+  }
 
-                // Address lines are everything between Name (line 0) and City/State/Zip line
-                const middleLines = lines.slice(1, cityStateIdx > 0 ? cityStateIdx : lines.length);
-                if (middleLines.length > 0) {
-                    street1 = middleLines[0] || '';
-                }
-                if (middleLines.length > 1) {
-                    street2 = middleLines.slice(1).join(', ');
-                }
+  // --- Address parser (US) ---
+  function parseRawAddress(text) {
+    const empty = { name: '', street1: '', street2: '', city: '', state: '', zip: '' };
+    if (!text || !text.trim()) return empty;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return empty;
 
-                return { name, street1, street2, city, state, zip };
-            }
+    const name = lines[0];
+    let street1 = '', street2 = '', city = '', state = '', zip = '';
+    const cityStateZipRegex = /^([A-Za-z\s.'-]+?)[,\s]+([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)$/;
 
-            // --- Update Preview Screen ---
-            function updatePreview() {
-                prevName.textContent = inputName.value.trim() || 'JOHN DOE';
-                prevStreet1.textContent = inputStreet1.value.trim() || '742 EVERGREEN TERRACE';
+    let cityStateIdx = -1;
+    for (let i = lines.length - 1; i >= 1; i--) {
+      const m = lines[i].match(cityStateZipRegex);
+      if (m) { city = m[1].trim(); state = m[2].toUpperCase(); zip = m[3]; cityStateIdx = i; break; }
+    }
 
-                if (inputStreet2.value.trim()) {
-                    prevStreet2.textContent = inputStreet2.value.trim().toUpperCase();
-                    prevStreet2.classList.remove('hidden');
-                } else {
-                    prevStreet2.classList.add('hidden');
-                }
+    // Fallback: pull ZIP and the last 2-letter token (the state) from the last line
+    if (cityStateIdx === -1 && lines.length > 1) {
+      let rest = lines[lines.length - 1];
+      const zipMatch = rest.match(/\b\d{5}(-\d{4})?\b/);
+      if (zipMatch) { zip = zipMatch[0]; rest = rest.replace(zipMatch[0], ' '); }
+      const twoLetter = [...rest.matchAll(/\b[A-Za-z]{2}\b/g)];
+      if (twoLetter.length) {
+        const last = twoLetter[twoLetter.length - 1];
+        state = last[0].toUpperCase();
+        rest = rest.slice(0, last.index) + ' ' + rest.slice(last.index + 2);
+      }
+      city = rest.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+      cityStateIdx = lines.length - 1;
+    }
 
-                prevCity.textContent = inputCity.value.trim().toUpperCase() || 'SPRINGFIELD';
-                prevState.textContent = inputState.value.trim().toUpperCase() || 'OR';
-                prevZip.textContent = inputZip.value.trim() || '97477';
+    const middle = lines.slice(1, cityStateIdx > 0 ? cityStateIdx : lines.length);
+    if (middle.length) street1 = middle[0];
+    if (middle.length > 1) street2 = middle.slice(1).join(', ');
+    return { name, street1, street2, city, state, zip };
+  }
 
-                // Badges Visibility
-                if (chkFragile.checked) {
-                    prevBadgeFragile.classList.remove('hidden');
-                } else {
-                    prevBadgeFragile.classList.add('hidden');
-                }
+  // --- Preview ---
+  function currentRef() {
+    return (chkOrderId.checked && inputOrderNum.value.trim()) ? inputOrderNum.value.trim().toUpperCase() : DEFAULT_REF;
+  }
 
-                if (chkCards.checked) {
-                    prevBadgeCards.classList.remove('hidden');
-                } else {
-                    prevBadgeCards.classList.add('hidden');
-                }
+  function updatePreview() {
+    prevName.textContent = inputName.value.trim() || 'JOHN DOE';
+    prevStreet1.textContent = inputStreet1.value.trim() || '742 EVERGREEN TERRACE';
+    if (inputStreet2.value.trim()) {
+      prevStreet2.textContent = inputStreet2.value.trim().toUpperCase();
+      prevStreet2.classList.remove('hidden');
+    } else {
+      prevStreet2.classList.add('hidden');
+    }
+    prevCity.textContent = inputCity.value.trim().toUpperCase() || 'SPRINGFIELD';
+    prevState.textContent = inputState.value.trim().toUpperCase() || 'OR';
+    prevZip.textContent = inputZip.value.trim() || '97477';
 
-                if (chkBarcode.checked) {
-                    prevBadgeBarcode.classList.remove('hidden');
-                } else {
-                    prevBadgeBarcode.classList.add('hidden');
-                }
+    prevBadgeFragile.classList.toggle('hidden', !chkFragile.checked);
+    prevBadgeCards.classList.toggle('hidden', !chkCards.checked);
+    prevBadgeBarcode.classList.toggle('hidden', !chkBarcode.checked);
 
-                if (chkOrderId.checked && inputOrderNum.value.trim()) {
-                    prevOrderRef.textContent = inputOrderNum.value.trim().toUpperCase();
-                } else {
-                    prevOrderRef.textContent = 'CARD-SHIPMENT';
-                }
-            }
+    const ref = currentRef();
+    prevOrderRef.textContent = ref;
+    const bc = code128Svg(ref);
+    prevBarcodeSvg.innerHTML = bc.svg;
+    prevBarcodeText.textContent = bc.text;
+  }
 
-            // --- Event Handlers for Live Sync ---
-            rawTextarea.addEventListener('input', () => {
-                const parsed = parseRawAddress(rawTextarea.value);
-                inputName.value = parsed.name;
-                inputStreet1.value = parsed.street1;
-                inputStreet2.value = parsed.street2;
-                inputCity.value = parsed.city;
-                inputState.value = parsed.state;
-                inputZip.value = parsed.zip;
-                updatePreview();
-            });
+  rawTextarea.addEventListener('input', () => {
+    const p = parseRawAddress(rawTextarea.value);
+    inputName.value = p.name; inputStreet1.value = p.street1; inputStreet2.value = p.street2;
+    inputCity.value = p.city; inputState.value = p.state; inputZip.value = p.zip;
+    updatePreview();
+  });
+  [inputName, inputStreet1, inputStreet2, inputCity, inputState, inputZip, inputOrderNum].forEach(i => i.addEventListener('input', updatePreview));
+  [chkFragile, chkCards, chkBarcode, chkOrderId].forEach(c => c.addEventListener('change', updatePreview));
 
-            // Input field manual adjustments
-            [inputName, inputStreet1, inputStreet2, inputCity, inputState, inputZip, inputOrderNum].forEach(input => {
-                input.addEventListener('input', updatePreview);
-            });
+  btnSample.addEventListener('click', () => {
+    rawTextarea.value = 'Ricky Proehl Fan Club\n100 Stadium Drive, Suite 200\nCharlotte, NC 28202';
+    rawTextarea.dispatchEvent(new Event('input'));
+    inputOrderNum.value = 'SPORTLOTS-99104';
+    updatePreview();
+    showToast('Sample card order loaded!', 'fa-wand-magic-sparkles');
+  });
 
-            [chkFragile, chkCards, chkBarcode, chkOrderId].forEach(chk => {
-                chk.addEventListener('change', updatePreview);
-            });
+  btnClear.addEventListener('click', () => {
+    [rawTextarea, inputName, inputStreet1, inputStreet2, inputCity, inputState, inputZip, inputOrderNum].forEach(i => i.value = '');
+    updatePreview();
+    showToast('Fields cleared', 'fa-eraser');
+  });
 
-            // Sample Data Button
-            btnSample.addEventListener('click', () => {
-                rawTextarea.value = `Ricky Proehl Fan Club\n100 Stadium Drive, Suite 200\nCharlotte, NC 28202`;
-                rawTextarea.dispatchEvent(new Event('input'));
-                inputOrderNum.value = "SPORTLOTS-#99104";
-                updatePreview();
-                showToast("Sample card order loaded!", "fa-wand-magic-sparkles");
-            });
+  // --- History ---
+  function saveToHistory(record) {
+    printHistory.unshift(record);
+    if (printHistory.length > 20) printHistory.pop();
+    store.set('thermal_print_history', printHistory);
+    renderHistory();
+  }
 
-            // Clear Button
-            btnClear.addEventListener('click', () => {
-                rawTextarea.value = '';
-                inputName.value = '';
-                inputStreet1.value = '';
-                inputStreet2.value = '';
-                inputCity.value = '';
-                inputState.value = '';
-                inputZip.value = '';
-                inputOrderNum.value = '';
-                updatePreview();
-                showToast("Fields cleared", "fa-eraser");
-            });
+  function renderHistory() {
+    if (!printHistory.length) {
+      historyListContainer.innerHTML = '<div class="text-center py-6 text-slate-500 italic">No recent labels printed yet.</div>';
+      return;
+    }
+    historyListContainer.innerHTML = printHistory.map((item, idx) => `
+      <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center hover:border-slate-700 transition">
+        <div>
+          <div class="font-bold text-slate-200">${escapeHtml(item.name)}</div>
+          <div class="text-[10px] text-slate-400">${escapeHtml(item.city)}, ${escapeHtml(item.state)} ${escapeHtml(item.zip)} • <span class="text-gold-400/80">${escapeHtml(item.time)}</span></div>
+        </div>
+        <button data-idx="${idx}" class="btn-reload text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded transition">Reload</button>
+      </div>`).join('');
+  }
 
-            // --- History Management ---
-            function saveToHistory(record) {
-                printHistory.unshift(record);
-                if (printHistory.length > 20) printHistory.pop(); // Keep last 20
-                localStorage.setItem('thermal_print_history', JSON.stringify(printHistory));
-                renderHistory();
-            }
+  historyListContainer.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-reload');
+    if (!btn) return;
+    const item = printHistory[Number(btn.dataset.idx)];
+    if (!item) return;
+    inputName.value = item.name; inputStreet1.value = item.street1; inputStreet2.value = item.street2 || '';
+    inputCity.value = item.city; inputState.value = item.state; inputZip.value = item.zip;
+    inputOrderNum.value = (item.ref && item.ref !== DEFAULT_REF) ? item.ref : '';
+    updatePreview();
+    showToast(`Reloaded label for ${item.name}`, 'fa-rotate-left');
+  });
 
-            function renderHistory() {
-                if (printHistory.length === 0) {
-                    historyListContainer.innerHTML = `<div class="text-center py-6 text-slate-500 italic">No recent shipments printed yet.</div>`;
-                    return;
-                }
+  $('btn-clear-history').addEventListener('click', () => {
+    printHistory = [];
+    store.remove('thermal_print_history');
+    renderHistory();
+    showToast('History log cleared', 'fa-trash');
+  });
 
-                historyListContainer.innerHTML = printHistory.map((item, idx) => `
-                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center hover:border-slate-700 transition">
-                        <div>
-                            <div class="font-bold text-slate-200">${escapeHtml(item.name)}</div>
-                            <div class="text-[10px] text-slate-400">${escapeHtml(item.city)}, ${escapeHtml(item.state)} ${escapeHtml(item.zip)} • <span class="text-gold-400/80">${escapeHtml(item.time)}</span></div>
-                        </div>
-                        <button onclick="reloadHistoryItem(${idx})" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded transition">
-                            Reload
-                        </button>
-                    </div>
-                `).join('');
-            }
+  // --- Print & export ---
+  function ensureReady() {
+    if (!inputName.value.trim() || !inputStreet1.value.trim() || !inputCity.value.trim() || !inputState.value.trim() || !inputZip.value.trim()) {
+      showToast('Fill in name, street, city, state, and ZIP first', 'fa-triangle-exclamation');
+      return false;
+    }
+    return true;
+  }
 
-            window.reloadHistoryItem = function(idx) {
-                const item = printHistory[idx];
-                if (!item) return;
-                inputName.value = item.name;
-                inputStreet1.value = item.street1;
-                inputStreet2.value = item.street2 || '';
-                inputCity.value = item.city;
-                inputState.value = item.state;
-                inputZip.value = item.zip;
-                inputOrderNum.value = item.ref || '';
-                updatePreview();
-                showToast(`Reloaded label for ${item.name}`, "fa-rotate-left");
-            };
+  function logLabel() {
+    saveToHistory({
+      name: inputName.value.trim(), street1: inputStreet1.value.trim(), street2: inputStreet2.value.trim(),
+      city: inputCity.value.trim(), state: inputState.value.trim().toUpperCase(), zip: inputZip.value.trim(),
+      ref: currentRef(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+  }
 
-            btnClearHistory.addEventListener('click', () => {
-                printHistory = [];
-                localStorage.removeItem('thermal_print_history');
-                renderHistory();
-                showToast("History log cleared", "fa-trash");
-            });
+  btnPrint.addEventListener('click', () => {
+    if (!ensureReady()) return;
+    logLabel();
+    showToast('Opening print dialog...', 'fa-print');
+    setTimeout(() => window.print(), 300);
+  });
 
-            // --- Print Direct Trigger ---
-            btnPrint.addEventListener('click', () => {
-                const labelData = {
-                    name: inputName.value.trim() || 'JOHN DOE',
-                    street1: inputStreet1.value.trim() || '742 EVERGREEN TERRACE',
-                    street2: inputStreet2.value.trim(),
-                    city: inputCity.value.trim() || 'SPRINGFIELD',
-                    state: inputState.value.trim() || 'OR',
-                    zip: inputZip.value.trim() || '97477',
-                    ref: inputOrderNum.value.trim() || 'CARD-SHIPMENT',
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
+  // Draws the label at 203 DPI (812 x 1218 px = 4x6 in), black on white, for printer apps
+  async function renderLabelCanvas() {
+    try { await document.fonts.ready; } catch (e) {}
+    const W = 812, H = 1218, S = W / 400;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    g.setTransform(S, 0, 0, S, 0, 0);
+    g.fillStyle = '#000'; g.textBaseline = 'top';
+    const F = 'Inter, Arial, Helvetica, sans-serif', M = '"Space Mono", "Courier New", monospace';
 
-                saveToHistory(labelData);
-                showToast("Sending label directly to printer...", "fa-print");
+    const txt = (t, x, y, px, wt, maxW, align, fam, color) => {
+      let size = px;
+      g.font = `${wt} ${size}px ${fam || F}`;
+      while (maxW && g.measureText(t).width > maxW && size > 6) { size -= 0.5; g.font = `${wt} ${size}px ${fam || F}`; }
+      g.textAlign = align || 'left';
+      g.fillStyle = color || '#000';
+      g.fillText(t, x, y);
+    };
+    const P = 20, R = 380;
 
-                // Trigger browser print dialog optimized via @media print for 4x6 thermal paper
-                setTimeout(() => {
-                    window.print();
-                }, 300);
-            });
+    // Sender block
+    txt(prevSenderName.textContent.toUpperCase(), P, P, 12, 700, 270);
+    txt(prevSenderStreet.textContent.toUpperCase(), P, P + 16, 11, 500, 270);
+    txt(prevSenderCityState.textContent.toUpperCase(), P, P + 31, 11, 500, 270);
 
-            // --- Sender Modal & Local Storage ---
-            btnSettingsToggle.addEventListener('click', () => modalSettings.classList.remove('hidden'));
-            btnModalClose.addEventListener('click', () => modalSettings.classList.add('hidden'));
+    if (chkCards.checked) {
+      g.strokeStyle = '#000'; g.lineWidth = 1.5; g.strokeRect(R - 52, P, 52, 46);
+      g.fillStyle = '#000';
+      for (let i = 0; i < 3; i++) g.fillRect(R - 38 + i * 3, P + 7 + i * 6, 24, 4);
+      txt('CARDS', R - 26, P + 32, 8, 900, null, 'center');
+    }
+    if (chkFragile.checked) {
+      g.fillStyle = '#000'; g.fillRect(P, P + 60, R - P, 26);
+      txt('DO NOT BEND - TRADING CARDS ENCLOSED', 200, P + 67, 11, 900, 340, 'center', F, '#fff');
+    }
+    g.fillStyle = '#000'; g.fillRect(P, P + 96, R - P, 2);
 
-            btnModalSave.addEventListener('click', () => {
-                const senderData = {
-                    name: senderNameInput.value.trim(),
-                    street: senderStreetInput.value.trim(),
-                    city: senderCityInput.value.trim(),
-                    statezip: senderStateZipInput.value.trim()
-                };
-                localStorage.setItem('thermal_sender_profile', JSON.stringify(senderData));
-                applySenderProfile(senderData);
-                modalSettings.classList.add('hidden');
-                showToast("Default return address updated!", "fa-floppy-disk");
-            });
+    // Ship-to block
+    let y = 205;
+    txt('SHIP TO:', P + 6, y, 11, 700, null, 'left', F, '#444'); y += 22;
+    txt(inputName.value.trim().toUpperCase(), P + 6, y, 30, 900, R - P - 12); y += 40;
+    txt(inputStreet1.value.trim().toUpperCase(), P + 6, y, 22, 800, R - P - 12); y += 30;
+    if (inputStreet2.value.trim()) { txt(inputStreet2.value.trim().toUpperCase(), P + 6, y, 22, 800, R - P - 12); y += 30; }
+    const cityLine = `${inputCity.value.trim()}, ${inputState.value.trim()} ${inputZip.value.trim()}`.toUpperCase();
+    txt(cityLine, P + 6, y + 4, 26, 900, R - P - 12);
 
-            function applySenderProfile(data) {
-                prevSenderName.textContent = data.name || 'CARD VAULT LOGISTICS';
-                prevSenderStreet.textContent = data.street || '123 COLLECTOR WAY, STE 400';
-                prevSenderCityState.textContent = (data.city + ', ' + data.statezip) || 'BRAWLEY, CA 92227';
-            }
+    // Bottom block
+    g.fillStyle = '#000'; g.fillRect(P, 455, R - P, 2);
+    const ref = currentRef();
+    txt('REF: ' + ref, P, 470, 12, 700, 220, 'left', M);
+    txt('STANDARD PARCEL', R, 471, 11, 700, null, 'right', F, '#444');
 
-            function loadSenderProfile() {
-                const saved = localStorage.getItem('thermal_sender_profile');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    senderNameInput.value = parsed.name || '';
-                    senderStreetInput.value = parsed.street || '';
-                    senderCityInput.value = parsed.city || '';
-                    senderStateZipInput.value = parsed.statezip || '';
-                    applySenderProfile(parsed);
-                }
-            }
+    if (chkBarcode.checked) {
+      const d = code128Bars(ref);
+      const availPx = Math.round((R - P) * S);
+      const mod = Math.max(2, Math.floor(availPx / d.total));   // whole pixels per module keeps bars sharp
+      const startX = Math.round(P * S + (availPx - mod * d.total) / 2);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#000';
+      const top = Math.round(497 * S), height = Math.round(62 * S);
+      d.bars.forEach(b => g.fillRect(startX + b.x * mod, top, b.w * mod, height));
+      g.setTransform(S, 0, 0, S, 0, 0);
+      txt(d.text, 200, 566, 11, 700, 340, 'center', M, '#222');
+    }
+    return c;
+  }
 
-            // --- Toast Message Box Helper ---
-            function showToast(message, iconClass = "fa-circle-check") {
-                const toast = document.getElementById('toast');
-                const toastMsg = document.getElementById('toast-message');
-                const toastIcon = document.getElementById('toast-icon');
+  // Minimal single-page PDF (4x6 in) wrapping the label image
+  function makePdf(jpeg, w, h) {
+    const enc = new TextEncoder(), parts = [], offs = [];
+    let len = 0;
+    const push = b => { const u = typeof b === 'string' ? enc.encode(b) : b; parts.push(u); len += u.length; };
+    const obj = (n, fn) => { offs[n] = len; push(`${n} 0 obj\n`); fn(); push('\nendobj\n'); };
+    push('%PDF-1.4\n');
+    obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+    obj(2, () => push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+    obj(3, () => push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 288 432] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>'));
+    obj(4, () => {
+      push(`<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);
+      push(jpeg); push('\nendstream');
+    });
+    const content = 'q 288 0 0 432 0 0 cm /Im0 Do Q';
+    obj(5, () => push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));
+    const xref = len;
+    let x = 'xref\n0 6\n0000000000 65535 f \n';
+    for (let i = 1; i <= 5; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+    push(x + `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+    return new Blob(parts, { type: 'application/pdf' });
+  }
 
-                toastMsg.textContent = message;
-                toastIcon.className = `fa-solid ${iconClass} text-gold-400 text-lg`;
+  async function exportLabel(kind) {
+    if (!ensureReady()) return;
+    try {
+      const c = await renderLabelCanvas();
+      const base = 'label-' + (inputName.value.trim().replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'shipping');
+      let blob, name;
+      if (kind === 'pdf') {
+        const bin = atob(c.toDataURL('image/jpeg', 0.98).split(',')[1]);
+        const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+        blob = makePdf(bytes, c.width, c.height); name = base + '.pdf';
+      } else {
+        blob = await new Promise(r => c.toBlob(r, 'image/png')); name = base + '.png';
+      }
+      logLabel();
 
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                toast.classList.add('translate-y-0', 'opacity-100');
+      if (kind === 'share') {
+        const file = new File([blob], name, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: 'Shipping label' }); }
+          catch (err) { if (err.name !== 'AbortError') showToast('Share failed. Try Save PNG instead.', 'fa-triangle-exclamation'); }
+          return;
+        }
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      showToast(`Saved ${name}`, 'fa-download');
+    } catch (err) {
+      showToast('Could not create the label file', 'fa-triangle-exclamation');
+    }
+  }
 
-                setTimeout(() => {
-                    toast.classList.remove('translate-y-0', 'opacity-100');
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
-            }
+  $('btn-save-png').addEventListener('click', () => exportLabel('png'));
+  $('btn-save-pdf').addEventListener('click', () => exportLabel('pdf'));
+  $('btn-share').addEventListener('click', () => exportLabel('share'));
+  try {
+    const t = new File(['x'], 't.png', { type: 'image/png' });
+    if (!(navigator.canShare && navigator.canShare({ files: [t] }))) $('btn-share').classList.add('hidden');
+  } catch (e) { $('btn-share').classList.add('hidden'); }
 
-            function escapeHtml(str) {
-                return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-            }
+  // --- Sender profile ---
+  $('btn-settings-toggle').addEventListener('click', () => modalSettings.classList.remove('hidden'));
+  $('btn-modal-close').addEventListener('click', () => modalSettings.classList.add('hidden'));
+  modalSettings.addEventListener('click', e => { if (e.target === modalSettings) modalSettings.classList.add('hidden'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') modalSettings.classList.add('hidden'); });
 
-            // Initial load
-            loadSenderProfile();
-            renderHistory();
-            updatePreview();
-        });
-    </script>
+  $('btn-modal-save').addEventListener('click', () => {
+    const data = {
+      name: senderNameInput.value.trim(), street: senderStreetInput.value.trim(),
+      city: senderCityInput.value.trim(), statezip: senderStateZipInput.value.trim()
+    };
+    store.set('thermal_sender_profile', data);
+    applySenderProfile(data);
+    modalSettings.classList.add('hidden');
+    showToast('Default return address updated!', 'fa-floppy-disk');
+  });
+
+  function applySenderProfile(d) {
+    prevSenderName.textContent = (d.name || 'CARD VAULT LOGISTICS').toUpperCase();
+    prevSenderStreet.textContent = (d.street || '123 COLLECTOR WAY, STE 400').toUpperCase();
+    const cityState = [d.city, d.statezip].filter(Boolean).join(', ');
+    prevSenderCityState.textContent = (cityState || 'BRAWLEY, CA 92227').toUpperCase();
+  }
+
+  function loadSenderProfile() {
+    const saved = store.get('thermal_sender_profile', null);
+    if (!saved) return;
+    senderNameInput.value = saved.name || '';
+    senderStreetInput.value = saved.street || '';
+    senderCityInput.value = saved.city || '';
+    senderStateZipInput.value = saved.statezip || '';
+    applySenderProfile(saved);
+  }
+
+  // --- Helpers ---
+  let toastTimer;
+  function showToast(message, iconClass = 'fa-circle-check') {
+    const toast = $('toast');
+    $('toast-message').textContent = message;
+    $('toast-icon').className = `fa-solid ${iconClass} text-gold-400 text-lg`;
+    toast.classList.remove('translate-y-20', 'opacity-0');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  loadSenderProfile();
+  renderHistory();
+  updatePreview();
+});
+</script>
 </body>
 </html>
