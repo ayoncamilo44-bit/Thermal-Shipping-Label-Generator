@@ -152,7 +152,7 @@ Springfield, OR 97477"></textarea>
             <div id="preview-to-street1" class="text-sm font-bold text-black uppercase leading-tight">742 EVERGREEN TERRACE</div>
             <div id="preview-to-street2" class="text-sm font-bold text-black uppercase leading-tight hidden">APT 2B</div>
             <div class="text-base font-extrabold text-black uppercase leading-tight pt-1 flex items-baseline gap-1">
-              <span id="preview-to-city">SPRINGFIELD</span>,
+              <span id="preview-to-city">SPRINGFIELD,</span>
               <span id="preview-to-state">OR</span>
               <span id="preview-to-zip" class="text-lg font-black ml-1">97477</span>
             </div>
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       prevStreet2.classList.add('hidden');
     }
-    prevCity.textContent = inputCity.value.trim().toUpperCase() || 'SPRINGFIELD';
+    prevCity.textContent = (inputCity.value.trim().toUpperCase() || 'SPRINGFIELD') + ',';
     prevState.textContent = inputState.value.trim().toUpperCase() || 'OR';
     prevZip.textContent = inputZip.value.trim() || '97477';
 
